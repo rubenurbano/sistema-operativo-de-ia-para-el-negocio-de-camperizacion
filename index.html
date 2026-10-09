@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema Operativo de IA para Camperización — Tutorial</title>
+<style>
+:root{
+  --bg:#0a0e1a; --card:#0f172a; --accent:#1e3a5f;
+  --accent-bright:#38bdf8; --accent-2:#34d399;
+  --text:#e2e8f0; --text-muted:#94a3b8; --border:#1e293b;
+  --font-scale:1;
+}
+body.light{
+  --bg:#f1f5f9; --card:#ffffff; --accent:#dbeafe;
+  --accent-bright:#0284c7; --accent-2:#059669;
+  --text:#0f172a; --text-muted:#475569; --border:#cbd5e1;
+}
+*{box-sizing:border-box}
+html{font-size:calc(16px * var(--font-scale))}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  line-height:1.65;-webkit-font-smoothing:antialiased;
+  transition:background .25s,color .25s;
+}
+/* ===== Toolbar ===== */
+.toolbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,14,26,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:.5rem .8rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;
+}
+body.light .toolbar{background:rgba(241,245,249,.92)}
+.toolbar button{
+  background:var(--card);border:1px solid var(--border);color:var(--text);
+  padding:.4rem .7rem;border-radius:8px;cursor:pointer;font-size:.85rem;
+  font-family:inherit;transition:border-color .15s,background .15s;
+}
+.toolbar button:hover{border-color:var(--accent-bright)}
+.search-wrap{
+  flex:1;display:flex;align-items:center;gap:.25rem;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:.15rem .3rem;min-width:180px;
+}
+.search-wrap input{
+  flex:1;border:none;background:transparent;padding:.35rem .3rem;
+  outline:none;color:var(--text);font-family:inherit;font-size:.85rem;
+}
+.search-info{color:var(--text-muted);font-size:.75rem;padding-right:.4rem;white-space:nowrap}
+.iframe-hint{
+  display:none;background:rgba(251,191,36,.15);border:1px solid #fbbf24;
+  color:#fbbf24;padding:.55rem .9rem;border-radius:8px;font-size:.82rem;
+  margin:.5rem .8rem 0;
+}
+/* ===== Progress ===== */
+.progress-bar{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--accent-bright),var(--accent-2));
+  z-index:100;transition:width .1s;
+}
+/* ===== Tabs ===== */
+.tabs{
+  display:flex;overflow-x:auto;gap:.35rem;
+  padding:.55rem .8rem;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:52px;z-index:40;scrollbar-width:thin;
+}
+.tab{
+  background:transparent;border:1px solid var(--border);color:var(--text-muted);
+  padding:.4rem .85rem;border-radius:999px;cursor:pointer;font-size:.78rem;
+  font-weight:600;white-space:nowrap;font-family:inherit;
+  letter-spacing:.5px;transition:all .2s;
+}
+.tab:hover{color:var(--text);border-color:var(--accent-bright)}
+.tab.active{background:var(--accent-bright);color:#0a0e1a;border-color:var(--accent-bright)}
+/* ===== Content ===== */
+.content{max-width:900px;margin:0 auto;padding:1.4rem 1rem 4rem}
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:1.9rem;line-height:1.25;margin:0 0 .8rem}
+h2{font-size:1.35rem;margin:2rem 0 .8rem;color:var(--accent-bright);border-bottom:1px solid var(--border);padding-bottom:.4rem}
+h3{font-size:1.08rem;margin:1.4rem 0 .55rem}
+h4{font-size:.98rem;margin:1.1rem 0 .45rem;color:var(--accent-bright)}
+.grad-text{
+  background:linear-gradient(90deg,#38bdf8,#34d399);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+body.light .grad-text{
+  background:none;-webkit-background-clip:initial;background-clip:initial;
+  color:#0284c7;
+}
+.lead{font-size:1.06rem;color:var(--text-muted);margin:0 0 1.4rem}
+p{margin:0 0 .9rem}
+ul,ol{padding-left:1.35rem;margin:0 0 .9rem}
+li{margin:.22rem 0}
+a{color:var(--accent-bright)}
+/* ===== Cards ===== */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.9rem;margin:.9rem 0}
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:1rem 1.05rem;margin:.9rem 0;
+}
+.card h3{margin-top:0}
+.card>:last-child{margin-bottom:0}
+/* ===== Callouts ===== */
+.callout{
+  border-left:3px solid var(--accent-bright);background:var(--card);
+  padding:.75rem .95rem;border-radius:8px;margin:.9rem 0;
+}
+.callout.warn{border-left-color:#fbbf24}
+.callout.danger{border-left-color:#f87171}
+.callout.ok{border-left-color:#34d399}
+.callout strong{color:var(--accent-bright)}
+.callout.warn strong{color:#fbbf24}
+.callout.danger strong{color:#f87171}
+.callout.ok strong{color:#34d399}
+/* ===== Code ===== */
+pre,code{font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:.85em}
+pre{
+  background:#070b14;border:1px solid var(--border);border-radius:10px;
+  padding:.9rem 1rem;overflow-x:auto;white-space:pre;line-height:1.55;
+  color:#cbd5e1;margin:.8rem 0;
+}
+body.light pre{background:#f1f5f9;color:#0f172a}
+code{background:rgba(56,189,248,.12);color:var(--accent-bright);padding:.08em .35em;border-radius:4px}
+pre code{background:none;color:inherit;padding:0}
+/* ===== Tables ===== */
+table{
+  width:100%;border-collapse:collapse;margin:.9rem 0;font-size:.9em;
+  display:block;overflow-x:auto;
+}
+th,td{border:1px solid var(--border);padding:.5rem .65rem;text-align:left;vertical-align:top}
+th{background:var(--accent);color:#e2e8f0;font-weight:600}
+body.light th{color:#0f172a}
+tbody tr:nth-child(even){background:rgba(255,255,255,.02)}
+body.light tbody tr:nth-child(even){background:rgba(0,0,0,.03)}
+/* ===== Steps ===== */
+.steps{counter-reset:step;list-style:none;padding:0;margin:.8rem 0}
+.steps>li{
+  counter-increment:step;position:relative;
+  padding:.55rem 0 .55rem 2.4rem;
+  border-bottom:1px dashed var(--border);
+}
+.steps>li:last-child{border-bottom:none}
+.steps>li::before{
+  content:counter(step);position:absolute;left:0;top:.6rem;
+  width:1.65rem;height:1.65rem;background:var(--accent-bright);color:#0a0e1a;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.82rem;
+}
+/* ===== Copy block ===== */
+.copy-block{position:relative;margin:.9rem 0}
+.copy-block pre{margin:0;padding-right:5rem}
+.copyBtn{
+  position:absolute;top:.5rem;right:.5rem;background:var(--accent-bright);
+  color:#0a0e1a;border:none;border-radius:6px;padding:.3rem .7rem;
+  font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:background .15s;
+}
+.copyBtn:hover{background:#7dd3fc}
+.copyBtn.copied{background:#34d399}
+/* ===== Checklist ===== */
+.checklist{list-style:none;padding:0;margin:.6rem 0}
+.checklist li{
+  display:flex;align-items:flex-start;gap:.6rem;
+  padding:.4rem 0;border-bottom:1px solid var(--border);
+}
+.checklist li:last-child{border-bottom:none}
+.checklist input[type=checkbox]{
+  width:1.15rem;height:1.15rem;accent-color:var(--accent-bright);
+  margin-top:.25rem;cursor:pointer;flex-shrink:0;
+}
+.checklist label{cursor:pointer}
+/* ===== Details ===== */
+details{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:.65rem .95rem;margin:.55rem 0;
+}
+details>summary{
+  cursor:pointer;font-weight:600;color:var(--accent-bright);
+  list-style:none;padding:.15rem 0;
+}
+details>summary::before{content:"▸ ";display:inline-block;transition:transform .2s}
+details[open]>summary::before{content:"▾ "}
+details>summary::-webkit-details-marker{display:none}
+details>*:not(summary){padding-left:.15rem}
+/* ===== Hero SVG ===== */
+.hero-svg-mount{
+  display:block;width:100%;max-width:820px;margin:0 auto 1.1rem;
+  border-radius:18px;overflow:hidden;border:1px solid var(--border);
+  background:var(--card);
+}
+.hero-svg-mount svg,.hero-svg-mount img{display:block;width:100%;height:auto}
+/* ===== Back to top ===== */
+.to-top{
+  position:fixed;bottom:1.1rem;right:1.1rem;width:44px;height:44px;
+  border-radius:50%;background:var(--accent-bright);color:#0a0e1a;
+  border:none;cursor:pointer;font-size:1.15rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+  z-index:60;box-shadow:0 6px 16px rgba(0,0,0,.4);font-family:inherit;
+}
+.to-top.show{opacity:1;pointer-events:auto}
+.to-top:hover{transform:translateY(-3px)}
+/* ===== Search highlight ===== */
+mark.search-hl{background:#fbbf24;color:#0a0e1a;border-radius:3px;padding:0 .15em}
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:1.1rem;left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#f87171;color:#0a0e1a;padding:.7rem 1.1rem;
+  border-radius:10px;font-weight:600;font-size:.88rem;opacity:0;
+  transition:all .3s;z-index:200;max-width:90vw;text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ===== Credits ===== */
+.author-name{
+  font-size:2.4rem;font-weight:800;letter-spacing:-.5px;margin:.3rem 0;
+  background:linear-gradient(90deg,#38bdf8,#34d399);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+body.light .author-name{
+  background:none;-webkit-background-clip:initial;background-clip:initial;
+  color:#0284c7;
+}
+.author-role{color:var(--text-muted);font-size:1rem;margin:0 0 1rem}
+.meta-line{
+  font-family:ui-monospace,monospace;font-size:.85rem;
+  color:var(--text-muted);margin:.2rem 0;
+}
+.meta-line strong{color:var(--accent-bright)}
+/* ===== Responsive ===== */
+@media (max-width:640px){
+  .content{padding:.9rem .75rem 3rem}
+  h1{font-size:1.45rem}
+  h2{font-size:1.15rem}
+  .author-name{font-size:1.8rem}
+  .toolbar{padding:.4rem .55rem;gap:.3rem}
+  .toolbar button{padding:.32rem .5rem;font-size:.75rem}
+  .tabs{top:46px;padding:.5rem .55rem}
+}
+/* ===== PRINT ===== */
+@media print{
+  @page{size:A4 portrait;margin:14mm 12mm}
+  html,body{
+    background:#fff !important;color:#111 !important;
+    padding:0 !important;margin:0 !important;font-size:11pt !important;
+  }
+  .toolbar,.tabs,.to-top,.copyBtn,.progress-bar,.search-info,.search-wrap,
+  .toast,.iframe-hint{display:none !important}
+  .panel{
+    display:block !important;page-break-after:auto !important;
+    animation:none !important;opacity:1 !important;transform:none !important;
+  }
+  .content{max-width:100%;padding:0}
+  pre,table{
+    overflow:visible !important;
+    white-space:pre-wrap !important;
+    word-break:break-word !important;
+  }
+  pre{
+    background:#f4f6fa !important;color:#111 !important;
+    border:1px solid #999 !important;
+  }
+  code{background:#eef2f8 !important;color:#111 !important}
+  .grad-text,h1,h2,h3,h4,p,li,td,th,span,strong,em,a,div,summary,label{
+    background:none !important;
+    -webkit-background-clip:initial !important;
+    background-clip:initial !important;
+    color:#111 !important;
+    text-shadow:none !important;
+  }
+  h2{border-bottom:1px solid #999 !important}
+  .card,.callout,details{
+    background:#f8fafc !important;border-color:#999 !important;color:#111 !important;
+  }
+  th{background:#e2e8f0 !important;color:#111 !important}
+  td,th{border-color:#999 !important}
+  .hero-svg-mount{
+    border:1px solid #999 !important;background:#fff !important;
+    page-break-inside:avoid;
+  }
+  details>summary{color:#111 !important}
+  details>summary::before{content:"▾ " !important}
+  .copy-block{position:static}
+  a{color:#111 !important;text-decoration:underline}
+  .steps>li::before{background:#111 !important;color:#fff !important}
+  .checklist input[type=checkbox]{accent-color:#111}
+}
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     SVG FUENTE (oculto). Contiene <defs> y el grupo #svgHero.
+     El JS extrae la plantilla y elimina este SVG del DOM.
+     ========================================================= -->
+<svg id="svgHeroSource" width="0" height="0" aria-hidden="true" focusable="false"
+     style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <linearGradient id="gBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1224"/>
+      <stop offset="1" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <radialGradient id="gAcc" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="fGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g id="svgHero">
+    <!-- Fondo -->
+    <rect width="820" height="260" rx="18" fill="url(#gBg)"/>
+
+    <!-- Rejilla de puntos -->
+    <g fill="#38bdf8" opacity="0.18">
+      <circle cx="40" cy="30" r="1.2"/><circle cx="120" cy="30" r="1.2"/>
+      <circle cx="200" cy="30" r="1.2"/><circle cx="280" cy="30" r="1.2"/>
+      <circle cx="360" cy="30" r="1.2"/><circle cx="440" cy="30" r="1.2"/>
+      <circle cx="520" cy="30" r="1.2"/><circle cx="600" cy="30" r="1.2"/>
+      <circle cx="680" cy="30" r="1.2"/><circle cx="760" cy="30" r="1.2"/>
+      <circle cx="40" cy="70" r="1.2"/><circle cx="120" cy="70" r="1.2"/>
+      <circle cx="200" cy="70" r="1.2"/><circle cx="280" cy="70" r="1.2"/>
+      <circle cx="360" cy="70" r="1.2"/><circle cx="440" cy="70" r="1.2"/>
+      <circle cx="520" cy="70" r="1.2"/><circle cx="600" cy="70" r="1.2"/>
+      <circle cx="680" cy="70" r="1.2"/><circle cx="760" cy="70" r="1.2"/>
+      <circle cx="40" cy="110" r="1.2"/><circle cx="120" cy="110" r="1.2"/>
+      <circle cx="200" cy="110" r="1.2"/><circle cx="760" cy="110" r="1.2"/>
+      <circle cx="40" cy="150" r="1.2"/><circle cx="120" cy="150" r="1.2"/>
+      <circle cx="760" cy="150" r="1.2"/>
+    </g>
+
+    <!-- Suelo / carretera -->
+    <rect x="0" y="222" width="820" height="38" fill="#070b14"/>
+    <line x1="0" y1="222" x2="820" y2="222" stroke="#1e3a5f" stroke-width="1"/>
+    <line x1="0" y1="241" x2="820" y2="241" stroke="#38bdf8" stroke-width="3"
+          stroke-dasharray="26 38" stroke-linecap="round" opacity="0.65">
+      <animate attributeName="stroke-dashoffset" from="0" to="-64"
+               dur="1.1s" repeatCount="indefinite"/>
+    </line>
+
+    <!-- Haz DATOS (van -> IA) -->
+    <path d="M 300 175 Q 460 90 610 92" fill="none" stroke="#38bdf8"
+          stroke-width="1.5" stroke-dasharray="4 6" opacity="0.35"/>
+
+    <!-- Haz APRENDIZAJE (IA -> van) -->
+    <path d="M 610 112 Q 460 200 300 195" fill="none" stroke="#34d399"
+          stroke-width="1.5" stroke-dasharray="4 6" opacity="0.35"/>
+
+    <!-- Partículas DATOS -->
+    <circle r="3.5" fill="#38bdf8" filter="url(#fGlow)">
+      <animateMotion dur="2.4s" repeatCount="indefinite"
+                     path="M 300 175 Q 460 90 610 92"/>
+      <animate attributeName="opacity" values="0;1;1;0"
+               dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.5" fill="#38bdf8" filter="url(#fGlow)">
+      <animateMotion dur="2.4s" begin="0.8s" repeatCount="indefinite"
+                     path="M 300 175 Q 460 90 610 92"/>
+      <animate attributeName="opacity" values="0;1;1;0"
+               dur="2.4s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.5" fill="#38bdf8" filter="url(#fGlow)">
+      <animateMotion dur="2.4s" begin="1.6s" repeatCount="indefinite"
+                     path="M 300 175 Q 460 90 610 92"/>
+      <animate attributeName="opacity" values="0;1;1;0"
+               dur="2.4s" begin="1.6s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Partículas APRENDIZAJE -->
+    <circle r="3.5" fill="#34d399" filter="url(#fGlow)">
+      <animateMotion dur="2.4s" begin="0.4s" repeatCount="indefinite"
+                     path="M 610 112 Q 460 200 300 195"/>
+      <animate attributeName="opacity" values="0;1;1;0"
+               dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.5" fill="#34d399" filter="url(#fGlow)">
+      <animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite"
+                     path="M 610 112 Q 460 200 300 195"/>
+      <animate attributeName="opacity" values="0;1;1;0"
+               dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="3.5" fill="#34d399" filter="url(#fGlow)">
+      <animateMotion dur="2.4s" begin="2.0s" repeatCount="indefinite"
+                     path="M 610 112 Q 460 200 300 195"/>
+      <animate attributeName="opacity" values="0;1;1;0"
+               dur="2.4s" begin="2.0s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Etiquetas flujo -->
+    <text x="450" y="68" text-anchor="middle"
+          font-family="ui-monospace,monospace" font-size="11"
+          fill="#38bdf8" opacity="0.9" letter-spacing="3">DATOS</text>
+    <text x="450" y="222" text-anchor="middle"
+          font-family="ui-monospace,monospace" font-size="11"
+          fill="#34d399" opacity="0.9" letter-spacing="3">APRENDIZAJE</text>
+
+    <!-- FURGONETA -->
+    <g>
+      <animateTransform attributeName="transform" type="translate"
+                        values="0,0;0,-2.5;0,0;0,1.5;0,0"
+                        dur="1.6s" repeatCount="indefinite"/>
+
+      <!-- Sombra -->
+      <ellipse cx="200" cy="218" rx="95" ry="5" fill="#000" opacity="0.4"/>
+
+      <!-- Panel solar -->
+      <rect x="135" y="146" width="95" height="6" rx="1.5"
+            fill="#38bdf8" opacity="0.85"/>
+      <line x1="155" y1="146" x2="155" y2="152" stroke="#0a0e1a" stroke-width="0.8"/>
+      <line x1="180" y1="146" x2="180" y2="152" stroke="#0a0e1a" stroke-width="0.8"/>
+      <line x1="205" y1="146" x2="205" y2="152" stroke="#0a0e1a" stroke-width="0.8"/>
+
+      <!-- Cuerpo principal -->
+      <path d="M 110 152 L 252 152 L 290 176 L 290 214 L 110 214 Z"
+            fill="#1e3a5f" stroke="#38bdf8" stroke-width="1.5" stroke-linejoin="round"/>
+
+      <!-- Parabrisas -->
+      <path d="M 254 156 L 284 177 L 284 188 L 254 188 Z"
+            fill="#0a0e1a" stroke="#38bdf8" stroke-width="1" opacity="0.9"/>
+
+      <!-- Ventanas laterales -->
+      <rect x="122" y="162" width="58" height="27" rx="3"
+            fill="#0a0e1a" stroke="#38bdf8" stroke-width="1" opacity="0.9"/>
+      <rect x="192" y="162" width="52" height="27" rx="3"
+            fill="#0a0e1a" stroke="#38bdf8" stroke-width="1" opacity="0.9"/>
+
+      <!-- Franja decorativa -->
+      <line x1="110" y1="200" x2="290" y2="200"
+            stroke="#38bdf8" stroke-width="1.2" opacity="0.5"/>
+
+      <!-- Texto VAN 001 -->
+      <text x="200" y="212" text-anchor="middle"
+            font-family="ui-monospace,monospace" font-size="8"
+            fill="#38bdf8" letter-spacing="1.5" opacity="0.9">VAN 001</text>
+
+      <!-- Rueda delantera -->
+      <g>
+        <circle cx="150" cy="214" r="13" fill="#0a0e1a" stroke="#38bdf8" stroke-width="2"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate"
+                            from="0 150 214" to="360 150 214"
+                            dur="1.4s" repeatCount="indefinite"/>
+          <line x1="150" y1="204" x2="150" y2="224"
+                stroke="#38bdf8" stroke-width="1.4" opacity="0.85"/>
+          <line x1="140" y1="214" x2="160" y2="214"
+                stroke="#38bdf8" stroke-width="1.4" opacity="0.85"/>
+        </g>
+        <circle cx="150" cy="214" r="3" fill="#38bdf8"/>
+      </g>
+
+      <!-- Rueda trasera -->
+      <g>
+        <circle cx="250" cy="214" r="13" fill="#0a0e1a" stroke="#38bdf8" stroke-width="2"/>
+        <g>
+          <animateTransform attributeName="transform" type="rotate"
+                            from="0 250 214" to="360 250 214"
+                            dur="1.4s" repeatCount="indefinite"/>
+          <line x1="250" y1="204" x2="250" y2="224"
+                stroke="#38bdf8" stroke-width="1.4" opacity="0.85"/>
+          <line x1="240" y1="214" x2="260" y2="214"
+                stroke="#38bdf8" stroke-width="1.4" opacity="0.85"/>
+        </g>
+        <circle cx="250" cy="214" r="3" fill="#38bdf8"/>
+      </g>
+    </g>
+
+    <!-- NODO IA -->
+    <g transform="translate(650,100)">
+      <circle r="48" fill="url(#gAcc)" opacity="0.9">
+        <animate attributeName="r" values="42;58;42" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.8;0.35;0.8"
+                 dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="40" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.5">
+        <animate attributeName="r" values="40;54;40" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="32" fill="#0f172a" stroke="#38bdf8" stroke-width="2"
+              filter="url(#fGlow)"/>
+      <text x="0" y="7" text-anchor="middle"
+            font-family="ui-monospace,monospace" font-size="20"
+            font-weight="700" fill="#38bdf8" letter-spacing="1">IA</text>
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+                          from="0 0 0" to="360 0 0"
+                          dur="6s" repeatCount="indefinite"/>
+        <circle cx="40" cy="0" r="2.5" fill="#38bdf8">
+          <animate attributeName="opacity" values="0.3;1;0.3"
+                   dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      <g>
+        <animateTransform attributeName="transform" type="rotate"
+                          from="120 0 0" to="480 0 0"
+                          dur="8s" repeatCount="indefinite"/>
+        <circle cx="34" cy="0" r="2" fill="#34d399">
+          <animate attributeName="opacity" values="0.3;1;0.3"
+                   dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+    </g>
+
+    <!-- Etiqueta CAMPER BRAIN -->
+    <text x="650" y="162" text-anchor="middle"
+          font-family="ui-monospace,monospace" font-size="11"
+          fill="#38bdf8" letter-spacing="2.5" opacity="0.9">CAMPER BRAIN</text>
+  </g>
+</svg>
+
+<!-- =========================================================
+     BARRA DE PROGRESO + TOOLBAR
+     ========================================================= -->
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="toolbar" role="toolbar" aria-label="Herramientas del tutorial">
+  <button id="themeBtn" title="Cambiar tema" aria-label="Cambiar tema">☀️</button>
+  <button id="fontMinus" title="Reducir tamaño del texto" aria-label="Reducir texto">A−</button>
+  <button id="fontPlus" title="Aumentar tamaño del texto" aria-label="Aumentar texto">A+</button>
+  <div class="search-wrap">
+    <span style="color:var(--text-muted);padding-left:.35rem" aria-hidden="true">🔍</span>
+    <input id="searchInput" type="search" placeholder="Buscar en el panel activo…"
+           aria-label="Buscar en el panel activo">
+    <button id="searchClear" title="Limpiar búsqueda"
+            style="background:transparent;border:none;color:var(--text-muted);padding:.2rem .4rem;cursor:pointer;font-family:inherit"
+            aria-label="Limpiar búsqueda">✕</button>
+    <span class="search-info" id="searchInfo" aria-live="polite"></span>
+  </div>
+  <button id="printBtn" title="Imprimir o guardar como PDF">🖨️ PDF</button>
+</div>
+
+<div class="iframe-hint" id="iframeHint">
+  ⚠️ Estás viendo este archivo dentro de un visor. Para imprimir o guardar como PDF,
+  ábrelo directamente en el navegador y pulsa <strong>Ctrl+P</strong> / <strong>Cmd+P</strong>.
+</div>
+
+<!-- =========================================================
+     PESTAÑAS
+     ========================================================= -->
+<nav class="tabs" role="tablist" aria-label="Secciones del tutorial">
+  <button class="tab active" data-tab="inicio" role="tab" aria-selected="true">INICIO</button>
+  <button class="tab" data-tab="conceptos" role="tab" aria-selected="false">CONCEPTOS</button>
+  <button class="tab" data-tab="procedimiento" role="tab" aria-selected="false">PROCEDIMIENTO</button>
+  <button class="tab" data-tab="practica" role="tab" aria-selected="false">PRÁCTICA</button>
+  <button class="tab" data-tab="errores" role="tab" aria-selected="false">ERRORES</button>
+  <button class="tab" data-tab="resumen" role="tab" aria-selected="false">RESUMEN</button>
+  <button class="tab" data-tab="fuentes" role="tab" aria-selected="false">FUENTES</button>
+  <button class="tab" data-tab="creditos" role="tab" aria-selected="false">CRÉDITOS</button>
+</nav>
+
+<main class="content">
+
+<!-- =========================================================
+     PANEL: INICIO
+     ========================================================= -->
+<section class="panel active" id="p-inicio" role="tabpanel" aria-labelledby="tab-inicio">
+  <div class="hero-svg-mount" data-svg-hero="true" role="img"
+       aria-label="Esquema animado: una furgoneta camper envía DATOS a la IA (CAMPER BRAIN) y la IA le devuelve APRENDIZAJE, en un ciclo continuo."></div>
+
+  <h1 class="grad-text">Sistema Operativo de IA para el Negocio de Camperización</h1>
+  <p class="lead">Cómo convertir la IA en el sistema operativo real de tu negocio desde el primer día,
+  con el proyecto <strong>CAMPER BRAIN</strong>, la filosofía <strong>TRO</strong> y el principio
+  «cada camper debe hacer más inteligente al sistema».</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>🎯 Qué vas a aprender</h3>
+      <ul>
+        <li>Qué es un <em>sistema operativo de IA</em> aplicado a un negocio real.</li>
+        <li>Cómo se construye <strong>CAMPER BRAIN</strong> paso a paso.</li>
+        <li>Cómo usar la IA sin delegar responsabilidad profesional.</li>
+        <li>Cómo capturar, ordenar y reutilizar conocimiento.</li>
+        <li>Cómo hacer que cada camper nueva mejore la siguiente.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>💡 Para qué sirve</h3>
+      <p>Para que cada decisión, cada error y cada acierto quede registrado y se convierta en
+      <strong>conocimiento reutilizable</strong>. El objetivo: que VAN 002 no empiece desde cero,
+      sino desde todo lo aprendido en VAN 001.</p>
+    </div>
+
+    <div class="card">
+      <h3>📋 Antes de empezar necesitas</h3>
+      <ul>
+        <li>Un negocio de camperización (o intención de montarlo).</li>
+        <li>Acceso a una IA conversacional.</li>
+        <li>Notion (o similar), hojas de cálculo y una carpeta de archivos.</li>
+        <li>Un proyecto real con el que empezar: tu <strong>VAN 001</strong>.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>🏁 Objetivos del tutorial</h3>
+      <ol>
+        <li>Entender la filosofía <strong>TRO</strong>.</li>
+        <li>Montar la estructura mínima de CAMPER BRAIN.</li>
+        <li>Aplicar el flujo de decisión asistida por IA.</li>
+        <li>Registrar problemas y convertirlos en procedimientos.</li>
+        <li>Diseñar VAN 002 con los datos de VAN 001.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧭 Cómo usar este tutorial</h3>
+    <ol class="steps">
+      <li>Lee primero la pestaña <strong>CONCEPTOS</strong> para entender la idea general.</li>
+      <li>Pasa a <strong>PROCEDIMIENTO</strong> para montar el sistema paso a paso.</li>
+      <li>Practica con los ejercicios de la pestaña <strong>PRÁCTICA</strong>.</li>
+      <li>Revisa <strong>ERRORES</strong> antes de improvisar.</li>
+      <li>Usa <strong>RESUMEN</strong> como referencia rápida y glosario.</li>
+    </ol>
+  </div>
+
+  <div class="callout ok">
+    <strong>Idea clave:</strong> no vamos a «usar ChatGPT para hacer camperizaciones».
+    Vamos a construir un sistema operativo empresarial donde la IA ayuda a capturar, organizar,
+    analizar, diseñar, presupuestar, documentar y aprender.
+  </div>
+</section>
+
+<!-- =========================================================
+     PANEL: CONCEPTOS
+     ========================================================= -->
+<section class="panel" id="p-conceptos" role="tabpanel" aria-labelledby="tab-conceptos">
+  <h1 class="grad-text">Conceptos fundamentales</h1>
+  <p class="lead">Antes de tocar nada, entiende las piezas del sistema. Sin estos conceptos,
+  cualquier intento de automatizar se convertirá en caos.</p>
+
+  <h2>1. ¿Qué es un sistema operativo de IA?</h2>
+  <p>No es «una IA que responde preguntas». Es un <strong>sistema estructurado</strong> donde
+  los datos, el conocimiento, los procedimientos y las decisiones viven en un lugar ordenado,
+  y la IA actúa como cerebro que los consulta y los transforma en análisis y acciones.</p>
+
+  <div class="callout">
+    <strong>Definición del sistema:</strong>
+    <em>«El sistema de inteligencia empresarial que concentra los datos, conocimiento,
+    procedimientos, decisiones y experiencia acumulada del negocio de camperización
+    y utiliza IA para convertirlos en decisiones y acciones.»</em>
+  </div>
+
+  <h2>2. Filosofía TRO — Pensamiento Orientado a Recursos</h2>
+  <p>Antes de pensar en herramientas, piensa en <strong>recursos</strong>: qué información tienes,
+  qué fuentes son fiables, qué has aprendido ya, quién puede validar qué. La IA no sustituye
+  recursos: los <em>coordina</em>.</p>
+
+  <h2>3. Las 5 capas del sistema</h2>
+  <table>
+    <thead>
+      <tr><th>Capa</th><th>Qué contiene</th><th>Ejemplo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>1 — DATOS</strong></td><td>Todo lo que sabemos</td><td>Fichas, medidas, precios, fotos</td></tr>
+      <tr><td><strong>2 — CONOCIMIENTO</strong></td><td>Todo lo que hemos aprendido</td><td>Procedimientos, lecciones, errores</td></tr>
+      <tr><td><strong>3 — IA</strong></td><td>Modelos que usan datos y conocimiento</td><td>Análisis, comparativas, generación</td></tr>
+      <tr><td><strong>4 — PROCESOS</strong></td><td>Cómo se hacen las cosas</td><td>Flujo de decisión, compras, revisión</td></tr>
+      <tr><td><strong>5 — PERSONAS</strong></td><td>Quién decide y firma</td><td>Rubén + ingeniería + talleres + clientes</td></tr>
+    </tbody>
+  </table>
+
+  <p>La arquitectura completa del flujo es:</p>
+  <pre><code>DATOS → CONOCIMIENTO → IA → PROCESO → DECISIÓN HUMANA → RESULTADO → NUEVOS DATOS</code></pre>
+
+  <h2>4. CAMPER BRAIN</h2>
+  <p>Es el nombre interno del <strong>cerebro del sistema</strong>. No tiene que ser una aplicación
+  compleja desde el principio. En la primera fase puede estar formado por:</p>
+  <ul>
+    <li>Notion.</li>
+    <li>Archivos Markdown.</li>
+    <li>Hojas de cálculo.</li>
+    <li>Fotografías.</li>
+    <li>PDF y documentación técnica.</li>
+    <li>Conversaciones con IA (como registros, no como almacén principal).</li>
+    <li>GitHub cuando resulte útil.</li>
+    <li>Automatizaciones progresivas.</li>
+  </ul>
+
+  <h2>5. Principio fundamental</h2>
+  <div class="callout danger">
+    <strong>LA IA NO DEBE SER EL LUGAR DONDE GUARDAMOS LA INFORMACIÓN.</strong>
+    La información debe vivir en un sistema estructurado. La IA debe poder consultarla.
+  </div>
+  <p>La memoria permanente son: <strong>documentos + base de datos + archivos + registros</strong>.
+  La IA es el cerebro que consulta y utiliza esa memoria.</p>
+
+  <h2>6. Estructura de CAMPER BRAIN (15 áreas)</h2>
+  <p>Estas son las áreas que debe tener el sistema desde el primer día:</p>
+  <ol>
+    <li>01 — VEHÍCULOS</li>
+    <li>02 — DISEÑOS</li>
+    <li>03 — COMPONENTES</li>
+    <li>04 — PROVEEDORES</li>
+    <li>05 — NORMATIVA</li>
+    <li>06 — HOMOLOGACIÓN</li>
+    <li>07 — PROYECTOS</li>
+    <li>08 — COSTES</li>
+    <li>09 — PROBLEMAS</li>
+    <li>10 — SOLUCIONES</li>
+    <li>11 — CLIENTES</li>
+    <li>12 — PROCEDIMIENTOS</li>
+    <li>13 — CONOCIMIENTO</li>
+    <li>14 — MÉTRICAS</li>
+    <li>15 — PLANTILLAS</li>
+  </ol>
+
+  <h2>7. Regla de oro de la información</h2>
+  <p>Toda información importante debe tener:</p>
+  <pre><code>FUENTE + FECHA + CONTEXTO + ESTADO</code></pre>
+  <p>Ejemplo:</p>
+  <pre><code>COMPONENTE: Batería X
+FUENTE:     Ficha oficial del fabricante
+FECHA:      07/10/2026
+CONTEXTO:   VAN 001
+ESTADO:     Pendiente de validar</code></pre>
+
+  <h2>8. Fuentes de información</h2>
+  <table>
+    <thead>
+      <tr><th>Tipo</th><th>Ejemplos</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>FUENTE PRIMARIA</strong></td><td>Fabricante, Ministerio, BOE, ingeniería, ITV, documentación oficial</td></tr>
+      <tr><td><strong>FUENTE SECUNDARIA</strong></td><td>Empresas, foros, blogs, vídeos, experiencias de usuarios</td></tr>
+      <tr><td><strong>EXPERIENCIA PROPIA</strong></td><td>VAN 001, VAN 002, clientes</td></tr>
+    </tbody>
+  </table>
+  <p>La IA debe saber <strong>qué tipo de fuente</strong> está utilizando.</p>
+
+  <h2>9. Jerarquía de confianza</h2>
+  <p>Cuando exista conflicto entre fuentes, este es el orden:</p>
+  <ol>
+    <li>Normativa oficial.</li>
+    <li>Documentación oficial del fabricante.</li>
+    <li>Ingeniería responsable.</li>
+    <li>ITV.</li>
+    <li>Documentación técnica especializada.</li>
+    <li>Experiencia propia documentada.</li>
+    <li>Fuentes secundarias.</li>
+    <li>Opiniones de Internet.</li>
+  </ol>
+  <div class="callout warn">
+    <strong>Nunca</strong> permitir que una respuesta de IA tenga prioridad sobre una fuente oficial.
+  </div>
+
+  <h2>10. Identificadores</h2>
+  <p>No mezclar información entre proyectos. Utiliza identificadores claros:</p>
+  <pre><code>VAN001   VAN002   VAN003
+COMP-001 COMP-002 COMP-003
+PROB-001 PROB-002
+PROC-001 PROC-002</code></pre>
+  <p>Esto permite que la IA pueda relacionar información de forma fiable.</p>
+
+  <h2>11. Niveles de confianza</h2>
+  <table>
+    <thead>
+      <tr><th>Nivel</th><th>Significado</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>CONFIRMADO</strong></td><td>Existe fuente fiable o experiencia propia comprobada.</td></tr>
+      <tr><td><strong>PROBABLE</strong></td><td>Existe evidencia suficiente pero no definitiva.</td></tr>
+      <tr><td><strong>HIPÓTESIS</strong></td><td>Necesita validación.</td></tr>
+      <tr><td><strong>DESCONOCIDO</strong></td><td>No hay información suficiente.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>12. La IA debe separar</h2>
+  <ul>
+    <li><strong>HECHO:</strong> «La ficha técnica indica X.»</li>
+    <li><strong>INFERENCIA:</strong> «Esto podría permitir Y.»</li>
+    <li><strong>RECOMENDACIÓN:</strong> «Conviene estudiar Z.»</li>
+    <li><strong>DECISIÓN:</strong> «Se ha decidido X.»</li>
+  </ul>
+  <p>Esto evita mezclar realidad con opinión.</p>
+
+  <div class="callout ok">
+    <strong>La IA debe poder decir «NO LO SÉ».</strong>
+    Si no hay información suficiente: <em>NO INVENTAR</em>. Respuesta esperada:
+    «No hay datos suficientes para decidir. Estos son los datos que necesitamos…».
+  </div>
+</section>
+
+<!-- =========================================================
+     PANEL: PROCEDIMIENTO
+     ========================================================= -->
+<section class="panel" id="p-procedimiento" role="tabpanel" aria-labelledby="tab-procedimiento">
+  <h1 class="grad-text">Procedimiento paso a paso</h1>
+  <p class="lead">Cómo montar CAMPER BRAIN desde cero y cómo usarlo en el día a día.
+  Sigue las fases en orden.</p>
+
+  <h2>Visión general de fases</h2>
+  <table>
+    <thead><tr><th>Fase</th><th>Qué se hace</th></tr></thead>
+    <tbody>
+      <tr><td><strong>FASE 0 — HOY</strong></td><td>Crear CAMPER_BRAIN y las bases de datos mínimas.</td></tr>
+      <tr><td><strong>FASE 1 — VAN 001</strong></td><td>Registrar absolutamente todo. La IA organiza y analiza.</td></tr>
+      <tr><td><strong>FASE 2 — Procedimientos</strong></td><td>Convertir problemas repetidos en procedimientos.</td></tr>
+      <tr><td><strong>FASE 3 — VAN 002</strong></td><td>Usar CAMPER BRAIN como fuente principal de diseño.</td></tr>
+      <tr><td><strong>FASE 4 — Primer cliente</strong></td><td>Registrar todo igual que VAN 001.</td></tr>
+      <tr><td><strong>FASE 5 — Automatización</strong></td><td>Automatizar tareas repetitivas.</td></tr>
+      <tr><td><strong>FASE 6 — Agentes</strong></td><td>Crear agentes especializados solo donde aporten valor.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Paso 1 — Crear la estructura de carpetas</h2>
+  <p>Objetivo: tener una base física ordenada donde vivirán los datos.</p>
+  <ol class="steps">
+    <li>Crea una carpeta llamada <code>CAMPER_BRAIN</code>.</li>
+    <li>Dentro, crea las 14 subcarpetas siguientes.</li>
+    <li>Numera los nombres para que siempre aparezcan en el mismo orden.</li>
+  </ol>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-folders">Copiar</button>
+    <pre id="cb-folders"><code>CAMPER_BRAIN/
+  01_VEHICULOS/
+  02_PROYECTOS/
+  03_COMPONENTES/
+  04_PROVEEDORES/
+  05_NORMATIVA/
+  06_HOMOLOGACION/
+  07_COSTES/
+  08_PROBLEMAS/
+  09_PROCEDIMIENTOS/
+  10_CLIENTES/
+  11_MANUALES/
+  12_METRICAS/
+  13_PLANTILLAS/
+  14_BACKUP/</code></pre>
+  </div>
+
+  <h3>Estructura interna de cada proyecto (ejemplo VAN001)</h3>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-van">Copiar</button>
+    <pre id="cb-van"><code>VAN001/
+  00_ADMIN/
+  01_VEHICULO/
+  02_DISENO/
+  03_INGENIERIA/
+  04_COMPRAS/
+  05_CONSTRUCCION/
+  06_ELECTRICIDAD/
+  07_AGUA/
+  08_MOBILIARIO/
+  09_HOMOLOGACION/
+  10_ITV/
+  11_COSTES/
+  12_FOTOGRAFIAS/
+  13_PROBLEMAS/
+  14_MANUAL/
+  15_LECCIONES_APRENDIDAS/</code></pre>
+  </div>
+
+  <h2>Paso 2 — Crear las bases de datos mínimas</h2>
+  <p>Objetivo: que la IA pueda consultar información estructurada, no conversaciones sueltas.</p>
+  <ol class="steps">
+    <li>Crea una base de datos de <strong>vehículos</strong> (una fila por vehículo).</li>
+    <li>Crea una base de datos de <strong>componentes</strong> (con identificadores COMP-XXX).</li>
+    <li>Crea una base de datos de <strong>proveedores</strong>.</li>
+    <li>Crea un <strong>registro de decisiones</strong>.</li>
+    <li>Crea un <strong>registro de problemas</strong>.</li>
+  </ol>
+
+  <h3>Campos mínimos por tabla</h3>
+  <table>
+    <thead><tr><th>Tabla</th><th>Campos mínimos</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>VEHÍCULOS</td>
+        <td>ID · Marca · Modelo · Año · Matrícula/ID interno · Kilometraje · MMA · Tara · Carga útil · Dimensiones · Estado mecánico</td>
+      </tr>
+      <tr>
+        <td>COMPONENTES</td>
+        <td>ID · Nombre · Categoría · Proveedor · Precio · Peso · Documentación · Estado · Proyecto asignado</td>
+      </tr>
+      <tr>
+        <td>PROVEEDORES</td>
+        <td>ID · Nombre · Contacto · Productos · Plazo · Condiciones · Historial</td>
+      </tr>
+      <tr>
+        <td>DECISIONES</td>
+        <td>ID · Decisión · Motivo · Datos usados · Alternativas · Responsable · Fecha · Resultado</td>
+      </tr>
+      <tr>
+        <td>PROBLEMAS</td>
+        <td>ID · Problema · Proyecto · Módulo · Causa · Solución · Coste · Horas · Prevención</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Paso 3 — Configurar el prompt maestro</h2>
+  <p>La IA debe recibir siempre unas reglas generales. Copia este prompt y úsalo como base de trabajo.</p>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-prompt">Copiar</button>
+    <pre id="cb-prompt"><code>Actúa como asistente del Sistema Operativo CAMPER BRAIN.
+
+No inventes datos.
+
+Distingue hechos, hipótesis y recomendaciones.
+
+Utiliza primero las fuentes primarias disponibles.
+
+Indica qué información falta.
+
+No sustituyas a ingenieros, fabricantes, ITV ni profesionales responsables.
+
+Cuando exista una contradicción, señálala.
+
+Cuando una decisión tenga consecuencias económicas, muestra alternativas y costes.
+
+Toda recomendación debe indicar su nivel de confianza.
+
+Identifica siempre el proyecto al que pertenece la información.
+
+Convierte los resultados importantes en conocimiento reutilizable.</code></pre>
+  </div>
+
+  <h2>Paso 4 — Flujo de decisión asistida</h2>
+  <p>Cada decisión importante sigue este flujo. No te saltes ningún paso.</p>
+  <pre><code>PREGUNTA
+   ↓
+DATOS
+   ↓
+FUENTES
+   ↓
+ANÁLISIS IA
+   ↓
+ALTERNATIVAS
+   ↓
+DECISIÓN HUMANA
+   ↓
+EJECUCIÓN
+   ↓
+RESULTADO
+   ↓
+REGISTRO</code></pre>
+
+  <h2>Paso 5 — Registrar problemas</h2>
+  <p>Cada problema se convierte en una ficha con identificador propio. Formato mínimo:</p>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-prob">Copiar</button>
+    <pre id="cb-prob"><code>PROB-001
+
+PROBLEMA:  Descripción breve.
+PROYECTO:  VAN001
+MÓDULO:    Electricidad
+CAUSA:     X
+SOLUCIÓN:  Y
+COSTE:     Z €
+HORAS:     N
+PREVENCIÓN: Modificar procedimiento PROC-XXX.</code></pre>
+  </div>
+
+  <h2>Paso 6 — Convertir problemas en procedimientos</h2>
+  <p>Cuando un problema se repite, deja de ser un problema y pasa a ser un procedimiento documentado.</p>
+  <pre><code>PROBLEMA → SOLUCIÓN → PROCEDIMIENTO</code></pre>
+  <p>Ejemplo: «Antes de cerrar un panel, fotografiar todas las instalaciones ocultas»
+  se convierte en <code>PROC-014 — FOTOGRAFÍA DE INSTALACIONES OCULTAS</code>.</p>
+
+  <div class="callout warn">
+    <strong>Los procedimientos no se borran: se versionan.</strong>
+    <pre style="margin:.5rem 0 0"><code>PROC-014 V1
+PROC-014 V2
+PROC-014 V3</code></pre>
+    Así sabemos cómo evolucionó el conocimiento.
+  </div>
+
+  <h2>Paso 7 — Revisiones periódicas</h2>
+
+  <h3>Reunión semanal con la IA</h3>
+  <ol>
+    <li>¿Qué hemos conseguido?</li>
+    <li>¿Qué se ha bloqueado?</li>
+    <li>¿Qué hemos aprendido?</li>
+    <li>¿Dónde hemos gastado demasiado?</li>
+    <li>¿Qué decisión está pendiente?</li>
+    <li>¿Qué riesgo está creciendo?</li>
+    <li>¿Qué debemos cambiar?</li>
+  </ol>
+
+  <h3>Revisión mensual</h3>
+  <p>La IA prepara el informe con: COSTE · HORAS · PROBLEMAS · MARGEN · PROGRESO · APRENDIZAJE · DECISIONES.</p>
+
+  <h3>Revisión después de cada camper</h3>
+  <ol>
+    <li>¿Qué repetiríamos?</li>
+    <li>¿Qué eliminaríamos?</li>
+    <li>¿Qué cambiaríamos?</li>
+    <li>¿Qué costó demasiado?</li>
+    <li>¿Qué tardó demasiado?</li>
+    <li>¿Qué produjo problemas?</li>
+    <li>¿Qué componente sustituiríamos?</li>
+    <li>¿Qué procedimiento debemos crear?</li>
+    <li>¿Qué debería automatizarse?</li>
+  </ol>
+
+  <h2>Checklist de implementación</h2>
+  <ul class="checklist">
+    <li><input type="checkbox" id="ck1" data-check="ck1"><label for="ck1">He creado la carpeta CAMPER_BRAIN con las 14 subcarpetas.</label></li>
+    <li><input type="checkbox" id="ck2" data-check="ck2"><label for="ck2">He creado la carpeta VAN001 con las 15 subcarpetas.</label></li>
+    <li><input type="checkbox" id="ck3" data-check="ck3"><label for="ck3">He creado la base de datos de vehículos.</label></li>
+    <li><input type="checkbox" id="ck4" data-check="ck4"><label for="ck4">He creado la base de datos de componentes.</label></li>
+    <li><input type="checkbox" id="ck5" data-check="ck5"><label for="ck5">He creado la base de datos de proveedores.</label></li>
+    <li><input type="checkbox" id="ck6" data-check="ck6"><label for="ck6">He creado el registro de decisiones.</label></li>
+    <li><input type="checkbox" id="ck7" data-check="ck7"><label for="ck7">He creado el registro de problemas.</label></li>
+    <li><input type="checkbox" id="ck8" data-check="ck8"><label for="ck8">Tengo guardado el prompt maestro.</label></li>
+    <li><input type="checkbox" id="ck9" data-check="ck9"><label for="ck9">Sé aplicar el flujo de decisión asistida.</label></li>
+    <li><input type="checkbox" id="ck10" data-check="ck10"><label for="ck10">Tengo el sistema de copias de seguridad activo.</label></li>
+  </ul>
+
+  <div class="callout ok">
+    <strong>Siguiente acción:</strong> crea hoy mismo la estructura de carpetas de CAMPER_BRAIN
+    y las bases de datos mínimas. No esperes a tener «todo pensado».
+  </div>
+</section>
+
+<!-- =========================================================
+     PANEL: PRÁCTICA
+     ========================================================= -->
+<section class="panel" id="p-practica" role="tabpanel" aria-labelledby="tab-practica">
+  <h1 class="grad-text">Práctica guiada</h1>
+  <p class="lead">Ejemplos reales y ejercicios con solución, para que interiorices el sistema
+  antes de aplicarlo a tu propia camperización.</p>
+
+  <h2>Caso real — «¿Qué batería utilizar en VAN 001?»</h2>
+  <p>Este es el ejemplo canónico del sistema. Fíjate en la diferencia entre lo que NO se hace
+  y lo que SÍ se hace.</p>
+
+  <h3>Lo que NO se hace</h3>
+  <div class="callout danger">
+    Preguntar a la IA y comprar lo que diga.
+  </div>
+
+  <h3>Lo que SÍ se hace</h3>
+  <ol class="steps">
+    <li>Definir consumo.</li>
+    <li>Definir autonomía.</li>
+    <li>Definir presupuesto.</li>
+    <li>Definir espacio.</li>
+    <li>Buscar opciones.</li>
+    <li>Obtener documentación.</li>
+    <li>Introducir datos en CAMPER BRAIN.</li>
+    <li>Pedir análisis a la IA.</li>
+    <li>Comparar alternativas.</li>
+    <li>Consultar requisitos técnicos.</li>
+    <li>Validar con profesional cuando corresponda.</li>
+    <li>Decidir.</li>
+    <li>Registrar la decisión.</li>
+  </ol>
+
+  <h3>Cómo recibe la IA los datos</h3>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-input">Copiar</button>
+    <pre id="cb-input"><code>PRESUPUESTO:      5.000 €
+PESO DISPONIBLE:  X kg
+USO:              Una persona
+AUTONOMÍA:        X días
+PRIORIDADES:      Coste + reparación sencilla</code></pre>
+  </div>
+
+  <h3>Cómo devuelve la IA el análisis</h3>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-output">Copiar</button>
+    <pre id="cb-output"><code>OPCIÓN A
+  Coste:
+  Peso:
+  Ventajas:
+  Desventajas:
+
+OPCIÓN B
+  Coste:
+  Peso:
+  Ventajas:
+  Desventajas:
+
+OPCIÓN C
+  Coste:
+  Peso:
+  Ventajas:
+  Desventajas:
+
+RECOMENDACIÓN:
+
+DATOS QUE FALTAN:</code></pre>
+  </div>
+
+  <div class="callout warn">
+    <strong>Ojo:</strong> el apartado «DATOS QUE FALTAN» es obligatorio.
+    Si la IA no lo incluye, pídeselo explícitamente.
+  </div>
+
+  <h2>Ejercicio 1 — Jerarquía de fuentes</h2>
+  <p>Un foro dice que una batería X es perfecta. La ficha oficial del fabricante indica que la
+  temperatura máxima de carga es 40 °C. Tú trabajas en una zona donde en verano se superan.
+  ¿Qué fuente prevalece y por qué?</p>
+  <details>
+    <summary>Ver solución</summary>
+    <p>Prevalece la <strong>documentación oficial del fabricante</strong> (fuente primaria)
+    sobre el foro (fuente secundaria), según la jerarquía de confianza.</p>
+    <p>Además, el dato del foro no está contextualizado (no indica uso, fecha, condiciones),
+    mientras que la ficha del fabricante sí.</p>
+    <p><strong>Acción:</strong> registrar la ficha como fuente, anotar el riesgo térmico
+    y pedir a la IA alternativas que soporten temperatura superior.</p>
+  </details>
+
+  <h2>Ejercicio 2 — Registrar una decisión</h2>
+  <p>Has decidido instalar un inversor de 1.500 W en lugar de uno de 2.000 W.
+  Registra la decisión con el formato del sistema.</p>
+  <details>
+    <summary>Ver solución</summary>
+    <pre><code>DECISIÓN:      Instalar inversor de 1.500 W.
+MOTIVO:        Consumo real medido &lt; 1.200 W. Ahorro de peso y coste.
+DATOS:         Ficha del inversor A (1.500 W, 3,2 kg, 480 €)
+               Ficha del inversor B (2.000 W, 5,1 kg, 720 €)
+               Registro de consumo VAN001 (pico 1.150 W)
+ALTERNATIVAS:  Inversor A (1.500 W) / Inversor B (2.000 W)
+RESPONSABLE:   Rubén
+FECHA:         07/10/2026
+RESULTADO:     Pendiente de validar tras 30 días de uso.</code></pre>
+  </details>
+
+  <h2>Ejercicio 3 — De problema a procedimiento</h2>
+  <p>Durante el montaje del módulo eléctrico de VAN 001 olvidaste fotografiar el cableado
+  antes de cerrar el panel. Meses después, un cliente pregunta por el recorrido de un cable.
+  Convierte este problema en un procedimiento.</p>
+  <details>
+    <summary>Ver solución</summary>
+    <pre><code>PROB-002
+
+PROBLEMA:  No se fotografió el cableado antes de cerrar el panel.
+PROYECTO:  VAN001
+MÓDULO:    Electricidad
+CAUSA:     No existía un paso de verificación visual en el proceso.
+SOLUCIÓN:  Abrir parcialmente el panel para inspección (2 h extra).
+COSTE:     120 €
+HORAS:     2
+PREVENCIÓN: Crear procedimiento obligatorio de fotografiado.</code></pre>
+    <p>Y el procedimiento derivado:</p>
+    <pre><code>PROC-014 — FOTOGRAFÍA DE INSTALACIONES OCULTAS V1
+
+ANTES de cerrar cualquier panel:
+1. Fotografiar el recorrido completo del cableado.
+2. Fotografiar cada conexión.
+3. Fotografiar etiquetas y fusibles.
+4. Guardar las fotos en /12_FOTOGRAFIAS/ con nombre
+   VANxxx_MODULO_FECHA_NN.jpg
+5. Marcar el paso como completado en la checklist del módulo.</code></pre>
+  </details>
+
+  <h2>Ejercicio 4 — Auditoría interna</h2>
+  <p>Antes de enviar el expediente de VAN 001 a la ingeniería, la IA debe auditar.
+  ¿Qué siete preguntas básicas debe responder la auditoría?</p>
+  <details>
+    <summary>Ver solución</summary>
+    <ol>
+      <li>¿Hay algún dato contradictorio?</li>
+      <li>¿Falta documentación?</li>
+      <li>¿Hay componentes sin referencia?</li>
+      <li>¿Hay cambios que no están registrados?</li>
+      <li>¿Hay diferencias entre diseño y construcción?</li>
+      <li>¿Hay presupuestos sin factura?</li>
+      <li>¿Hay fotografías pendientes?</li>
+      <li>¿Hay decisiones sin responsable?</li>
+    </ol>
+    <p>Resultado posible: <strong>APROBADO PARA REVISIÓN HUMANA</strong> o
+    <strong>INCIDENCIAS DETECTADAS</strong>.</p>
+  </details>
+</section>
+
+<!-- =========================================================
+     PANEL: ERRORES
+     ========================================================= -->
+<section class="panel" id="p-errores" role="tabpanel" aria-labelledby="tab-errores">
+  <h1 class="grad-text">Errores frecuentes y cómo evitarlos</h1>
+  <p class="lead">Los fallos que más se repiten al intentar montar un sistema operativo de IA.
+  Léelos antes de improvisar.</p>
+
+  <details>
+    <summary>1. Confiar ciegamente en la IA</summary>
+    <p><strong>Error:</strong> tratar las respuestas de la IA como decisiones técnicas.</p>
+    <p><strong>Solución:</strong> la IA es asistente de análisis, documentación y gestión.
+    Cuando una decisión requiera responsabilidad profesional (ingeniería, ITV, instalación
+    autorizada), la IA prepara la información y el profesional decide.</p>
+  </details>
+
+  <details>
+    <summary>2. Guardar la información dentro de los chats</summary>
+    <p><strong>Error:</strong> dejar el conocimiento únicamente en conversaciones con IA.</p>
+    <p><strong>Solución:</strong> la memoria permanente son documentos, base de datos, archivos
+    y registros. La IA consulta esa memoria, no la sustituye.</p>
+  </details>
+
+  <details>
+    <summary>3. Automatizar el caos</summary>
+    <p><strong>Error:</strong> crear agentes y automatizaciones antes de tener procesos claros.</p>
+    <p><strong>Solución:</strong> primero ORDENAR, después ESTANDARIZAR, después MEDIR
+    y solo al final AUTOMATIZAR.</p>
+  </details>
+
+  <details>
+    <summary>4. Alimentar el sistema con información sin fuente</summary>
+    <p><strong>Error:</strong> meter datos sin FUENTE + FECHA + CONTEXTO + ESTADO.</p>
+    <p><strong>Solución:</strong> toda información importante debe llevar esos cuatro campos.
+    <em>Garbage in → garbage out.</em></p>
+  </details>
+
+  <details>
+    <summary>5. Mezclar proyectos sin identificadores</summary>
+    <p><strong>Error:</strong> usar nombres genéricos («la batería», «el panel») y perder
+    la trazabilidad entre VAN 001 y VAN 002.</p>
+    <p><strong>Solución:</strong> identificadores claros: <code>VAN001</code>,
+    <code>COMP-001</code>, <code>PROB-001</code>, <code>PROC-001</code>.</p>
+  </details>
+
+  <details>
+    <summary>6. No registrar las decisiones</summary>
+    <p><strong>Error:</strong> tomar decisiones importantes y no documentarlas. Meses después
+    nadie recuerda por qué se eligió una opción.</p>
+    <p><strong>Solución:</strong> usar siempre el formato de registro:
+    DECISIÓN · MOTIVO · DATOS · ALTERNATIVAS · RESPONSABLE · FECHA · RESULTADO.</p>
+  </details>
+
+  <details>
+    <summary>7. No versionar los procedimientos</summary>
+    <p><strong>Error:</strong> sobrescribir un procedimiento cuando cambia algo.</p>
+    <p><strong>Solución:</strong> crear versiones (V1, V2, V3) y no borrar las anteriores.
+    Así se ve cómo evolucionó el conocimiento.</p>
+  </details>
+
+  <details>
+    <summary>8. Ocultar instalaciones sin fotografiar</summary>
+    <p><strong>Error:</strong> cerrar paneles sin dejar registro visual del interior.</p>
+    <p><strong>Solución:</strong> regla fija: <strong>NO OCULTAR UNA INSTALACIÓN
+    SIN FOTOGRAFIARLA.</strong> Las fotografías forman parte de la memoria técnica.</p>
+  </details>
+
+  <details>
+    <summary>9. Intentar sustituir a profesionales</summary>
+    <p><strong>Error:</strong> pedir a la IA que firme, certifique o decida legalmente.</p>
+    <p><strong>Solución:</strong> la IA prepara la documentación; el profesional revisa,
+    valida y firma.</p>
+  </details>
+
+  <details>
+    <summary>10. Crear diez agentes antes de tener datos</summary>
+    <p><strong>Error:</strong> construir agentes especializados porque «la IA puede hacerlo».</p>
+    <p><strong>Solución:</strong> primero saber qué procesos se repiten y merece la pena
+    automatizar. Después construir agentes solo donde aporten valor.</p>
+  </details>
+
+  <details>
+    <summary>11. Depender de una sola plataforma</summary>
+    <p><strong>Error:</strong> guardar todo el conocimiento dentro de una única aplicación.</p>
+    <p><strong>Solución:</strong> principio anti-lock-in. Los datos importantes deben poder
+    exportarse (Markdown, CSV, PDF, XLSX, JSON). CAMPER BRAIN debe existir en más de un lugar:
+    sistema principal + copia independiente.</p>
+  </details>
+
+  <details>
+    <summary>12. Querer programar una aplicación propia desde el día 1</summary>
+    <p><strong>Error:</strong> empezar programando meses sin clientes ni datos.</p>
+    <p><strong>Solución:</strong> el MVP puede ser Notion + carpeta de archivos + hoja de
+    cálculo + IA + fotografías + plantillas. Programar solo cuando existan datos y procesos
+    claros.</p>
+  </details>
+</section>
+
+<!-- =========================================================
+     PANEL: RESUMEN
+     ========================================================= -->
+<section class="panel" id="p-resumen" role="tabpanel" aria-labelledby="tab-resumen">
+  <h1 class="grad-text">Resumen, glosario y FAQ</h1>
+  <p class="lead">Referencia rápida del sistema completo.</p>
+
+  <h2>Puntos clave</h2>
+  <ul>
+    <li>La IA no es el almacén: es el cerebro que consulta la memoria.</li>
+    <li>La memoria permanente son documentos + bases de datos + archivos + registros.</li>
+    <li>Toda información importante: FUENTE + FECHA + CONTEXTO + ESTADO.</li>
+    <li>Jerarquía de confianza: normativa oficial por encima de todo.</li>
+    <li>La IA debe poder decir «no lo sé» y pedir los datos que faltan.</li>
+    <li>Registrar cada decisión: motivo, datos, alternativas, responsable, fecha, resultado.</li>
+    <li>Convertir problemas repetidos en procedimientos versionados.</li>
+    <li>No automatizar el caos: ordenar → estandarizar → medir → automatizar.</li>
+    <li>Cada camper debe hacer más inteligente al sistema.</li>
+  </ul>
+
+  <h2>Glosario</h2>
+  <table>
+    <thead><tr><th>Término</th><th>Significado</th></tr></thead>
+    <tbody>
+      <tr><td><strong>TRO</strong></td><td>Pensamiento Orientado a Recursos. Filosofía del proyecto.</td></tr>
+      <tr><td><strong>CAMPER BRAIN</strong></td><td>Cerebro del sistema: datos + conocimiento + IA + procesos + personas.</td></tr>
+      <tr><td><strong>VAN 001 / VAN 002</strong></td><td>Identificadores de proyectos de camperización.</td></tr>
+      <tr><td><strong>COMP-XXX</strong></td><td>Identificador de componente.</td></tr>
+      <tr><td><strong>PROB-XXX</strong></td><td>Identificador de problema.</td></tr>
+      <tr><td><strong>PROC-XXX</strong></td><td>Identificador de procedimiento.</td></tr>
+      <tr><td><strong>Fuente primaria</strong></td><td>Fabricante, Ministerio, BOE, ingeniería, ITV, documentación oficial.</td></tr>
+      <tr><td><strong>Fuente secundaria</strong></td><td>Foros, blogs, vídeos, experiencias de otros usuarios.</td></tr>
+      <tr><td><strong>MVP</strong></td><td>Minimum Viable Product. Versión mínima funcional del sistema.</td></tr>
+      <tr><td><strong>Lock-in</strong></td><td>Dependencia excesiva de una única plataforma o proveedor.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Tabla resumen: qué hace la IA y qué no</h2>
+  <table>
+    <thead><tr><th>La IA SÍ puede…</th><th>La IA NO puede…</th></tr></thead>
+    <tbody>
+      <tr><td>Analizar alternativas</td><td>Firmar documentos</td></tr>
+      <tr><td>Detectar contradicciones</td><td>Certificar legalmente</td></tr>
+      <tr><td>Generar listas de materiales</td><td>Sustituir a la ingeniería</td></tr>
+      <tr><td>Preparar documentación</td><td>Decidir por sí sola si algo es legalizable</td></tr>
+      <tr><td>Resumir el estado del negocio</td><td>Asumir responsabilidad profesional</td></tr>
+      <tr><td>Proponer procedimientos</td><td>Comprar sin aprobación humana</td></tr>
+      <tr><td>Indicar datos que faltan</td><td>Inventar información</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Preguntas frecuentes</h2>
+  <details>
+    <summary>¿Necesito programar una aplicación para empezar?</summary>
+    <p>No. El MVP puede ser Notion + carpeta de archivos + hoja de cálculo + IA + fotografías
+    + plantillas. Programar solo cuando existan datos y procesos claros.</p>
+  </details>
+
+  <details>
+    <summary>¿Puedo usar ChatGPT como memoria del sistema?</summary>
+    <p>No como memoria principal. La memoria debe vivir en un sistema estructurado
+    (documentos, bases de datos, archivos). La IA consulta esa memoria.</p>
+  </details>
+
+  <details>
+    <summary>¿Qué hago si la IA inventa un dato?</summary>
+    <p>Detectarlo y corregirlo. Insistir en el prompt maestro: «No inventes datos. Indica qué
+    información falta». Verificar siempre contra fuentes primarias.</p>
+  </details>
+
+  <details>
+    <summary>¿Cuándo debo crear un procedimiento?</summary>
+    <p>Cuando un problema se repite. El flujo es: PROBLEMA → SOLUCIÓN → PROCEDIMIENTO.
+    Y se versiona: V1, V2, V3…</p>
+  </details>
+
+  <details>
+    <summary>¿Qué pasa si un componente falla en VAN 001?</summary>
+    <p>Se registra como PROB-XXX con causa, solución, coste y horas. Cuando en VAN 002 se
+    proponga el mismo componente, la IA lo detecta y lo avisa.</p>
+  </details>
+
+  <details>
+    <summary>¿Cómo evito depender de una sola plataforma?</summary>
+    <p>Aplicando el principio anti-lock-in: los datos importantes deben poder exportarse
+    (Markdown, CSV, PDF, XLSX, JSON) y CAMPER BRAIN debe existir en más de un lugar.</p>
+  </details>
+
+  <details>
+    <summary>¿Cuándo tiene sentido crear agentes especializados?</summary>
+    <p>Cuando existan datos suficientes, procesos repetidos identificados y se sepa
+    exactamente qué automatización aporta valor. Antes de eso, no.</p>
+  </details>
+
+  <h2>Frase rectora</h2>
+  <div class="callout ok">
+    <p style="margin:0">
+      <strong>La furgoneta es el laboratorio.</strong><br>
+      <strong>La IA es el cerebro.</strong><br>
+      <strong>Los datos son la memoria.</strong><br>
+      <strong>Los procedimientos son el aprendizaje.</strong><br>
+      <strong>Las personas son las responsables de las decisiones.</strong><br>
+      Y cada camper nueva debe hacer que la siguiente sea mejor.
+    </p>
+  </div>
+</section>
+
+<!-- =========================================================
+     PANEL: FUENTES
+     ========================================================= -->
+<section class="panel" id="p-fuentes" role="tabpanel" aria-labelledby="tab-fuentes">
+  <h1 class="grad-text">Fuentes</h1>
+  <p class="lead">Material base a partir del cual se ha construido este tutorial.</p>
+
+  <h2>Documento principal</h2>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-fuente1">Copiar</button>
+    <pre id="cb-fuente1"><code>TUTORIAL
+SISTEMA OPERATIVO DE IA PARA EL NEGOCIO DE CAMPERIZACIÓN
+
+Proyecto: VAN 001 → VAN 002 → SISTEMA
+Filosofía: TRO — Pensamiento Orientado a Recursos
+Objetivo: convertir la IA en el sistema operativo real del negocio
+          desde el primer día.</code></pre>
+  </div>
+
+  <h2>Especificación de entrega del tutorial</h2>
+  <div class="copy-block">
+    <button class="copyBtn" data-copy="cb-fuente2">Copiar</button>
+    <pre id="cb-fuente2"><code>PROMPT MAESTRO — CREAR MI TUTORIAL HTML DESDE UN ARCHIVO (V2)
+
+Un solo archivo HTML completo y funcional.
+Sin dependencias externas. Sin CDN. Sin librerías externas.
+Debe funcionar abriéndolo directamente en el navegador,
+incluso sin conexión.</code></pre>
+  </div>
+
+  <h2>Jerarquía de fuentes del propio sistema</h2>
+  <p>Cuando exista conflicto entre fuentes, el sistema CAMPER BRAIN aplica este orden:</p>
+  <ol>
+    <li>Normativa oficial.</li>
+    <li>Documentación oficial del fabricante.</li>
+    <li>Ingeniería responsable.</li>
+    <li>ITV.</li>
+    <li>Documentación técnica especializada.</li>
+    <li>Experiencia propia documentada.</li>
+    <li>Fuentes secundarias.</li>
+    <li>Opiniones de Internet.</li>
+  </ol>
+
+  <div class="callout warn">
+    <strong>Nota:</strong> este tutorial es material formativo. No sustituye a la ingeniería,
+    la ITV, los fabricantes ni a los profesionales responsables de cada decisión técnica o legal.
+  </div>
+</section>
+
+<!-- =========================================================
+     PANEL: CRÉDITOS
+     ========================================================= -->
+<section class="panel" id="p-creditos" role="tabpanel" aria-labelledby="tab-creditos">
+  <h1 class="grad-text">Créditos</h1>
+
+  <!-- SVG ARRIBA DEL TODO, primera pantalla, antes de la tarjeta del autor -->
+  <div class="hero-svg-mount" data-svg-hero="true" role="img"
+       aria-label="Esquema animado: una furgoneta camper envía DATOS a la IA (CAMPER BRAIN) y la IA le devuelve APRENDIZAJE, en un ciclo continuo."></div>
+  <p style="text-align:center;color:var(--text-muted);font-size:.9rem;margin:-.5rem 0 1.2rem">
+    El ciclo del sistema: la furgoneta alimenta de datos a la IA y recibe de vuelta aprendizaje
+    reutilizable.
+  </p>
+
+  <div class="card" style="text-align:center">
+    <p class="author-name">Rubén Sbarsky</p>
+    <p class="author-role">Autor del tutorial</p>
+
+    <p class="meta-line"><strong>Fecha de creación:</strong> 07/10/2026</p>
+    <p class="meta-line"><strong>Hora de creación:</strong> 12:00:00</p>
+    <p class="meta-line"><strong>Versión del archivo:</strong> V001</p>
+  </div>
+
+  <div class="card">
+    <h3>Sobre este tutorial</h3>
+    <p>Tutorial interactivo en un único archivo HTML, construido a partir del documento
+    <em>«Sistema Operativo de IA para el Negocio de Camperización»</em> y de la especificación
+    de entrega del <em>Prompt Maestro V2</em>.</p>
+    <p>Incluye pestañas reales, SVG animado en INICIO y CRÉDITOS generado desde una única
+    plantilla, buscador en el panel activo, control de tamaño de texto, modo oscuro/claro,
+    botón de impresión/PDF, barra de progreso, checklist con progreso guardado y botones de
+    copiado en todos los bloques de texto.</p>
+  </div>
+
+  <div class="card">
+    <h3>Novedades de esta versión</h3>
+    <ul>
+      <li>SVG animado único reutilizado en INICIO y CRÉDITOS, montado con <code>innerHTML</code>
+      y ids únicos por copia.</li>
+      <li>Red de seguridad (<code>setInterval</code> ~800 ms) y plan B con
+      <code>&lt;img data:…&gt;</code> si el reloj del SVG no avanza.</li>
+      <li>Hoja <code>@media print</code> completa: <code>&lt;details&gt;</code> abiertos,
+      checkboxes conservados, SVG de todas las pestañas montados, sin
+      <code>background-clip: text</code> en el PDF.</li>
+      <li>Fecha y hora fijas en el HTML (sin <code>new Date()</code>).</li>
+      <li>Botón <em>Imprimir/PDF</em> con aviso visible si el navegador está dentro de un visor
+      sin <code>allow-modals</code>.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Aviso legal</h3>
+    <p>Este material es formativo. No sustituye a la normativa oficial, a la documentación del
+    fabricante, a la ingeniería responsable, a la ITV ni a ningún profesional con
+    responsabilidad legal. Cualquier decisión técnica o legal debe ser validada por quien
+    corresponda.</p>
+  </div>
+</section>
+
+</main>
+
+<button class="to-top" id="toTop" aria-label="Volver arriba" title="Volver arriba">↑</button>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     SVG HERO — plantilla única montada con innerHTML
+     ========================================================= */
+  var seq = 0, TPL = null, imgMode = false;
+
+  function svgTemplate() {
+    if (TPL) return TPL;
+    var src = document.getElementById('svgHeroSource');
+    if (!src) return { defs: '', art: '' };
+    var defsEl = src.querySelector('defs');
+    var artEl  = src.querySelector('#svgHero');
+    if (!artEl) return { defs: '', art: '' };
+    var d = defsEl ? defsEl.cloneNode(true) : null;
+    var g = artEl.cloneNode(true);
+    if (d) {
+      var inner = d.querySelector('#svgHero');
+      if (inner && inner.parentNode) inner.parentNode.removeChild(inner);
+    }
+    g.removeAttribute('id');
+    TPL = { defs: d ? d.innerHTML : '', art: g.outerHTML };
+    if (src.parentNode) src.parentNode.removeChild(src);
+    return TPL;
+  }
+
+  function svgMarkup(uid) {
+    var t = svgTemplate();
+    var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 260" ' +
+            'preserveAspectRatio="xMidYMid meet" role="img" ' +
+            'aria-label="Furgoneta camper conectada a la IA CAMPER BRAIN mediante datos y aprendizaje">';
+    s += '<defs>' + t.defs + '</defs>' + t.art + '</svg>';
+    ['gBg', 'gAcc', 'fGlow'].forEach(function (id) {
+      s = s.split('id="' + id + '"').join('id="' + id + '-' + uid + '"')
+           .split('url(#' + id + ')').join('url(#' + id + '-' + uid + ')');
+    });
+    return s;
+  }
+
+  function mountSvg(m) {
+    if (!m) return;
+    m.textContent = '';
+    if (imgMode) {
+      var im = new Image();
+      im.alt = '';
+      im.src = 'data:image/svg+xml;charset=utf-8,' +
+               encodeURIComponent(svgMarkup('i' + (++seq)));
+      m.appendChild(im);
+      return;
+    }
+    m.innerHTML = svgMarkup('h' + (++seq));
+    var svg = m.querySelector('svg');
+    if (!svg) return;
+    try { svg.setCurrentTime(0); svg.unpauseAnimations(); } catch (e) {}
+    var t0 = 0;
+    try { t0 = svg.getCurrentTime(); } catch (e) {}
+    setTimeout(function () {
+      if (document.hidden) return;
+      if (m.querySelector('svg') !== svg) return;
+      var r;
+      try { r = svg.getBoundingClientRect(); } catch (e) { return; }
+      var tNow = 0;
+      try { tNow = svg.getCurrentTime(); } catch (e) {}
+      if (r.height > 0 && (tNow - t0) < 0.3) {
+        imgMode = true;
+        mountSvg(m);
+      }
+    }, 1600);
+  }
+
+  function mountActiveSvg() {
+    document.querySelectorAll('.panel.active [data-svg-hero]').forEach(mountSvg);
+  }
+
+  function mountAllSvg() {
+    document.querySelectorAll('[data-svg-hero]').forEach(function (m) {
+      if (!m.firstElementChild) mountSvg(m);
+    });
+  }
+
+  /* Red de seguridad: cada 800 ms, remonta si el panel visible tiene el contenedor vacío */
+  setInterval(function () {
+    if (document.hidden) return;
+    document.querySelectorAll('.panel.active [data-svg-hero]').forEach(function (m) {
+      if (!m.firstElementChild) mountSvg(m);
+    });
+  }, 800);
+
+  /* =========================================================
+     PESTAÑAS
+     ========================================================= */
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+
+  function activateTab(id) {
+    tabs.forEach(function (t) {
+      var on = t.dataset.tab === id;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    panels.forEach(function (p) {
+      p.classList.toggle('active', p.id === 'p-' + id);
+    });
+    mountActiveSvg();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      activateTab(t.dataset.tab);
+      if (history.replaceState) history.replaceState(null, '', '#' + t.dataset.tab);
+    });
+  });
+
+  /* Pestaña inicial: desde el hash si es válida */
+  var initial = 'inicio';
+  if (location.hash) {
+    var h = location.hash.replace('#', '');
+    if (document.getElementById('p-' + h)) initial = h;
+  }
+  activateTab(initial);
+
+  /* =========================================================
+     TEMA OSCURO / CLARO
+     ========================================================= */
+  var themeBtn = document.getElementById('themeBtn');
+  if (localStorage.getItem('cb-theme') === 'light') {
+    document.body.classList.add('light');
+  }
+  themeBtn.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+  themeBtn.addEventListener('click', function () {
+    document.body.classList.toggle('light');
+    var isLight = document.body.classList.contains('light');
+    localStorage.setItem('cb-theme', isLight ? 'light' : 'dark');
+    themeBtn.textContent = isLight ? '🌙' : '☀️';
+  });
+
+  /* =========================================================
+     TAMAÑO DE TEXTO (A− / A+)
+     ========================================================= */
+  var fontScale = parseFloat(localStorage.getItem('cb-font') || '1');
+  if (isNaN(fontScale)) fontScale = 1;
+  document.documentElement.style.setProperty('--font-scale', fontScale);
+
+  document.getElementById('fontPlus').addEventListener('click', function () {
+    fontScale = Math.min(1.4, Math.round((fontScale + 0.1) * 10) / 10);
+    document.documentElement.style.setProperty('--font-scale', fontScale);
+    localStorage.setItem('cb-font', fontScale);
+  });
+  document.getElementById('fontMinus').addEventListener('click', function () {
+    fontScale = Math.max(0.8, Math.round((fontScale - 0.1) * 10) / 10);
+    document.documentElement.style.setProperty('--font-scale', fontScale);
+    localStorage.setItem('cb-font', fontScale);
+  });
+
+  /* =========================================================
+     BOTÓN VOLVER ARRIBA + BARRA DE PROGRESO
+     ========================================================= */
+  var toTop = document.getElementById('toTop');
+  var progress = document.getElementById('progressBar');
+
+  function onScroll() {
+    toTop.classList.toggle('show', window.scrollY > 400);
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+    progress.style.width = p + '%';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  toTop.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  /* =========================================================
+     BUSCADOR (panel activo)
+     ========================================================= */
+  var searchInput  = document.getElementById('searchInput');
+  var searchClear  = document.getElementById('searchClear');
+  var searchInfo   = document.getElementById('searchInfo');
+
+  function clearHighlights() {
+    document.querySelectorAll('mark.search-hl').forEach(function (el) {
+      var parent = el.parentNode;
+      if (!parent) return;
+      parent.replaceChild(document.createTextNode(el.textContent), el);
+      parent.normalize();
+    });
+  }
+
+  function runSearch() {
+    var q = searchInput.value.trim().toLowerCase();
+    clearHighlights();
+    if (!q) { searchInfo.textContent = ''; return; }
+
+    var activePanel = document.querySelector('.panel.active');
+    if (!activePanel) return;
+
+    var count = 0;
+    var walker = document.createTreeWalker(activePanel, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = node.parentElement;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        if (p.closest('.hero-svg-mount, .copyBtn, script, style, .search-wrap')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    var nodes = [];
+    var n;
+    while ((n = walker.nextNode())) nodes.push(n);
+
+    nodes.forEach(function (node) {
+      var text = node.nodeValue;
+      var lower = text.toLowerCase();
+      var idx = lower.indexOf(q);
+      if (idx === -1) return;
+
+      var frag = document.createDocumentFragment();
+      var pos = 0;
+      while (idx !== -1) {
+        if (idx > pos) frag.appendChild(document.createTextNode(text.slice(pos, idx)));
+        var mark = document.createElement('mark');
+        mark.className = 'search-hl';
+        mark.textContent = text.slice(idx, idx + q.length);
+        frag.appendChild(mark);
+        count++;
+        pos = idx + q.length;
+        idx = lower.indexOf(q, pos);
+      }
+      if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    });
+
+    searchInfo.textContent = count > 0
+      ? count + ' coincidencia' + (count > 1 ? 's' : '')
+      : 'Sin coincidencias';
+  }
+
+  searchInput.addEventListener('input', runSearch);
+  searchClear.addEventListener('click', function () {
+    searchInput.value = '';
+    runSearch();
+    searchInput.focus();
+  });
+
+  /* =========================================================
+     BOTONES COPIAR
+     ========================================================= */
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        ok ? resolve() : reject(new Error('copy failed'));
+      } catch (e) { reject(e); }
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('.copyBtn');
+    if (!btn) return;
+    var targetId = btn.dataset.copy;
+    var el = targetId ? document.getElementById(targetId) : null;
+    if (!el) return;
+    var text = (el.innerText || el.textContent || '').replace(/\s+$/, '');
+    var original = btn.textContent;
+    copyText(text).then(function () {
+      btn.textContent = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(function () {
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 1500);
+    }).catch(function () {
+      btn.textContent = '✗ Error';
+      setTimeout(function () { btn.textContent = original; }, 1500);
+    });
+  });
+
+  /* =========================================================
+     CHECKLIST (progreso guardado)
+     ========================================================= */
+  document.querySelectorAll('input[type=checkbox][data-check]').forEach(function (c) {
+    var key = 'cb-check-' + c.dataset.check;
+    if (localStorage.getItem(key) === '1') c.checked = true;
+    c.addEventListener('change', function () {
+      localStorage.setItem(key, c.checked ? '1' : '0');
+    });
+  });
+
+  /* =========================================================
+     TOAST
+     ========================================================= */
+  function showToast(msg) {
+    var t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () {
+        if (t.parentNode) t.parentNode.removeChild(t);
+      }, 400);
+    }, 5500);
+  }
+
+  /* =========================================================
+     IMPRIMIR / PDF
+     ========================================================= */
+  var printPrepared = false;
+
+  function preparePrint() {
+    if (printPrepared) return;
+    printPrepared = true;
+
+    /* Abrir todos los <details> cerrados y recordar cuáles estaban cerrados */
+    document.querySelectorAll('details').forEach(function (d) {
+      if (!d.open) {
+        d.dataset.printClosed = '1';
+        d.open = true;
+      }
+    });
+
+    /* Montar los SVG de TODAS las pestañas (aunque no se hayan visitado) */
+    mountAllSvg();
+
+    /* Fijar el SVG en un fotograma completo */
+    document.querySelectorAll('[data-svg-hero] svg').forEach(function (svg) {
+      try { svg.pauseAnimations(); } catch (e) {}
+      try { svg.setCurrentTime(1.0); } catch (e) {}
+    });
+  }
+
+  function cleanupPrint() {
+    if (!printPrepared) return;
+    printPrepared = false;
+
+    document.querySelectorAll('details[data-print-closed]').forEach(function (d) {
+      d.open = false;
+      delete d.dataset.printClosed;
+    });
+
+    document.querySelectorAll('[data-svg-hero] svg').forEach(function (svg) {
+      try { svg.unpauseAnimations(); } catch (e) {}
+    });
+  }
+
+  window.addEventListener('beforeprint', preparePrint);
+  window.addEventListener('afterprint', cleanupPrint);
+
+  document.getElementById('printBtn').addEventListener('click', function () {
+    preparePrint();
+    var opened = false;
+    try {
+      window.print();
+      opened = true;
+    } catch (e) {
+      opened = false;
+    }
+    if (!opened) {
+      cleanupPrint();
+      showToast('No se pudo abrir el diálogo de impresión. Abre este archivo ' +
+                'directamente en el navegador (no dentro de un visor) y pulsa ' +
+                'Ctrl+P / Cmd+P.');
+      return;
+    }
+    /* Fallback por si afterprint no se dispara en algún navegador */
+    setTimeout(function () {
+      if (!document.hidden) cleanupPrint();
+    }, 1500);
+  });
+
+  /* =========================================================
+     AVISO SI ESTAMOS DENTRO DE UN IFRAME
+     ========================================================= */
+  var iframeHint = document.getElementById('iframeHint');
+  try {
+    if (window.self !== window.top && iframeHint) {
+      iframeHint.style.display = 'block';
+    }
+  } catch (e) {
+    if (iframeHint) iframeHint.style.display = 'block';
+  }
+
+})();
+</script>
+</body>
+</html>
